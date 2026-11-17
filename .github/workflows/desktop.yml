@@ -1,14 +1,14 @@
-# The Linux / Windows desktop app: engine + host, the Tauri frontend, installers.
+# The Windows desktop app: engine + host, the Tauri frontend, installers.
 #
-# build.yml stays the macOS gate. This one covers what the port added:
+# This fork builds and publishes Windows only. The Linux product jobs stay
+# disabled; Ubuntu still runs the Windows cross-build and frontend checks.
 #
-#   engine-linux          CMake + CTest on lavapipe (Mesa's CPU Vulkan), then
-#                         the host smoke test against the staged host.
+#   engine-linux          disabled in this Windows-focused fork.
 #   engine-windows-cross  spektralab-host.exe cross-built with MinGW-w64, and
 #                         the same smoke test under wine (winevulkan -> lavapipe).
 #   desktop-checks        typecheck, eslint, vitest, cargo test, Playwright
 #                         (Chromium against the in-page mock host).
-#   package-linux         .deb + AppImage with the Linux host inside.
+#   package-linux         disabled in this Windows-focused fork.
 #   package-windows       the NSIS installer, built natively on Windows around
 #                         the cross-built host; then installed silently and
 #                         the installed host asked `hello` on a real Windows.
@@ -22,12 +22,9 @@
 # engine/LINUX_WINDOWS.md and engine/PORT_COVERAGE.md say what was verified
 # by hand beyond this.
 
-name: Desktop (Linux, Windows)
+name: Desktop (Windows)
 
-# Windows_Linux only. main is the macOS product and build.yml is its gate; a
-# change there reaches this port when it is merged into Windows_Linux, and that
-# push runs this. A pull_request run reads the workflow from its base branch's
-# merge, so the filter below keeps PRs into main off the Windows runners too.
+# Keep the inherited Windows_Linux branch name for this Windows-focused fork.
 on:
   push:
     branches: [Windows_Linux]
@@ -57,6 +54,7 @@ env:
 
 jobs:
   engine-linux:
+    if: false
     name: Engine + host (Linux, lavapipe)
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -329,6 +327,7 @@ jobs:
           npm run test:e2e
 
   package-linux:
+    if: false
     name: Package (Linux .deb + AppImage)
     needs: [engine-linux, desktop-checks]
     runs-on: ubuntu-24.04
@@ -467,7 +466,7 @@ jobs:
   # never overwrite an asset under an old Mac release.
   release-windows:
     name: Publish the Windows pre-release
-    needs: [engine-linux, engine-windows-cross, engine-windows-msvc, desktop-checks, package-linux, package-windows]
+    needs: [engine-windows-cross, engine-windows-msvc, desktop-checks, package-windows]
     if: github.ref == 'refs/heads/Windows_Linux' && github.event_name == 'workflow_dispatch' && inputs.publish_windows
     runs-on: ubuntu-24.04
     timeout-minutes: 15
